@@ -1,6 +1,6 @@
 require "pty"
 
-class ManageIQ::Providers::Kubernetes::ContainerManager::ContainerGroup < ::ContainerGroup
+class ManageIQ::Providers::Kubernetes::ContainerManager::ContainerGroup < ContainerGroup
   alias_attribute :pod_uid, :ems_ref
 
   supports :capture
@@ -18,7 +18,7 @@ class ManageIQ::Providers::Kubernetes::ContainerManager::ContainerGroup < ::Cont
       "--", "/bin/sh"
     )
 
-    { :pty_in => pty_in, :pty_out => pty_out, :pid => pid }
+    {:pty_in => pty_in, :pty_out => pty_out, :pid => pid}
   end
 
   def raw_send_terminal_input(data)
@@ -33,7 +33,11 @@ class ManageIQ::Providers::Kubernetes::ContainerManager::ContainerGroup < ::Cont
     session = POD_SESSIONS[id.to_s]
     return unless session
 
-    Process.kill("TERM", session[:pid]) rescue nil
+    begin
+      Process.kill("TERM", session[:pid])
+    rescue
+      nil
+    end
     POD_SESSIONS.delete(id.to_s)
   end
 
@@ -46,4 +50,6 @@ class ManageIQ::Providers::Kubernetes::ContainerManager::ContainerGroup < ::Cont
   def self.display_name(number = 1)
     n_('Pod (Kubernetes)', 'Pods (Kubernetes)', number)
   end
+
+  private_class_method :display_name
 end
